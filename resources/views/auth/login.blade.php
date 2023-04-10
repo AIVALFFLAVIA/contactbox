@@ -1,6 +1,14 @@
+
 <x-guest-layout>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <div class="flex justify-between items-center py-8 border-b">
+    <a href="{{ url('/login/github') }}" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Github</a>
+    <a href="{{ url('/login/google') }}" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Google</a>
+    <a href="{{ url('/login/facebook') }}" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Facebook</a>
+</div>
+
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
