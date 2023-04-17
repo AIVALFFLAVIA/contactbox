@@ -48,4 +48,11 @@ class User extends Authenticatable
     public function hasSocialLinked($service){
         return (bool) $this->social->where('service', $service)->count();
     }
+
+    public function contacts()
+    {
+        return $this->hasMany(\App\Models\Contact::class);
+    }
 }
+
+    

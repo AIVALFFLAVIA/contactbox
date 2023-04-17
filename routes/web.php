@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ContactsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SocialLoginController;
 
@@ -19,9 +20,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/flavia', function () {
-    return view('flavia');
-});
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -31,7 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::resource('contacts', \App\Http\Controllers\ContactsController::class);
+ 
 });
+
 
 Route::get('/login/{service}',[SocialLoginController::class, 'redirect']);
 Route::get('/login/{service}/callback',[SocialLoginController::class, 'callback']);
