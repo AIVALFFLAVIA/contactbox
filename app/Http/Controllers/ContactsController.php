@@ -39,8 +39,14 @@ class ContactsController extends Controller
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
+            'date_of_birth' =>$request->date_of_birth,
             'phone_number' => $request->phone_number,
-            // te gjitha
+            'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'country' => $request->country,
+            'postal_code' => $request->postal_code,
+           
         ]);
 
         return redirect()->route('contacts.index');
@@ -70,14 +76,25 @@ class ContactsController extends Controller
     {
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
-            // bej t gjitha ato qe jan required
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email'],
+            'phone_number' => ['required', 'string'],
+           
           ]);
           
           $customer = auth()->user()->contacts()->findOrFail($id);
           
           $customer->update([
             'first_name' => $request->first_name,
-            // beji te gjitha
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'date_of_birth' =>$request->date_of_birth,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'country' => $request->country,
+            'postal_code' => $request->postal_code,
           ]);
           
           return redirect()->route('contacts.index');
