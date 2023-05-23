@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Squire\Models\Country;
 use Illuminate\Http\Request;
 
 class ContactsController extends Controller
@@ -9,10 +10,36 @@ class ContactsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = auth()->user()->contacts()->paginate(12);
-        return view('contacts.index', ['contacts' => $contacts]);
+        $contacts = auth()->user()
+            ->contacts()
+            ->when($request->has('search') && strlen($request->search) > 0, function ($query) use ($request) {
+                $query->where(function ($subquery) use ($request) {
+                    $subquery->where('first_name', 'like', "%{$request->search}%")
+                    ->orWhere('last_name', 'like', "%{$request->search}%");
+                });
+            })
+            ->orderBy('first_name')
+            ->paginate(12)
+            ->withQueryString(['search']);
+
+        $selectedContact = null;
+
+        if ($request->has('contact') && $request->contact) {
+            $selectedContact = auth()->user()->contacts()
+                ->with('notes')
+                ->find($request->contact);
+        } else {
+            $selectedContact = $contacts->count() > 0
+                ? auth()->user()->contacts()->with('notes.user')->find($contacts->first()->id)
+                : null;
+        }
+
+        return view('contacts.index', [
+            'contacts' => $contacts,
+            'selectedContact' => $selectedContact,
+        ]);
     }
 
     /**
@@ -20,7 +47,11 @@ class ContactsController extends Controller
      */
     public function create()
     {
-        return view('contacts.create');
+        $countries = Country::all();
+
+        return view('contacts.create', [
+            'countries' => $countries,
+        ]);
     }
 
     /**
@@ -31,8 +62,8 @@ class ContactsController extends Controller
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email'],
-            'phone_number' => ['required', 'string'],
+            'email' => ['required', 'email', 'unique:contacts,email'],
+            'phone_number' => ['required', 'string', 'unique:contacts,phone_number'],
         ]);
 
         auth()->user()->contacts()->create([
@@ -46,7 +77,6 @@ class ContactsController extends Controller
             'state' => $request->state,
             'country' => $request->country,
             'postal_code' => $request->postal_code,
-           
         ]);
 
         return redirect()->route('contacts.index');
@@ -66,7 +96,12 @@ class ContactsController extends Controller
     public function edit(string $id)
     {
         $contact = auth()->user()->contacts()->findOrFail($id);
-        return view('contacts.edit', ['contact' => $contact]);
+        $countries = Country::all();
+
+        return view('contacts.edit', [
+            'contact' => $contact,
+            'countries' => $countries,
+        ]);
     }
 
     /**
@@ -79,25 +114,26 @@ class ContactsController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email'],
             'phone_number' => ['required', 'string'],
-           
           ]);
-          
-          $customer = auth()->user()->contacts()->findOrFail($id);
-          
-          $customer->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'date_of_birth' =>$request->date_of_birth,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'country' => $request->country,
-            'postal_code' => $request->postal_code,
-          ]);
-          
-          return redirect()->route('contacts.index');
+
+        $customer = auth()->user()->contacts()->findOrFail($id);
+
+        $customer->update([
+          'first_name' => $request->first_name,
+          'last_name' => $request->last_name,
+          'email' => $request->email,
+          'date_of_birth' =>$request->date_of_birth,
+          'phone_number' => $request->phone_number,
+          'address' => $request->address,
+          'city' => $request->city,
+          'state' => $request->state,
+          'country' => $request->country,
+          'postal_code' => $request->postal_code,
+        ]);
+
+        return redirect()->route('contacts.index', [
+            'contact' => $id,
+        ]);
     }
 
     /**
@@ -108,5 +144,15 @@ class ContactsController extends Controller
         $customer = auth()->user()->contacts()->findOrFail($id);
         $customer->delete();
         return redirect()->route('contacts.index');
+    }
+
+    public function search(Request $request)
+    {
+        $search = $request->input('search');
+
+        // Perform the search query using the $search parameter
+
+        // Pass the search results to the view
+        return view('contacts.index', compact('search'));
     }
 }
